@@ -1,0 +1,562 @@
+{
+  "name": "Viral Video Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash-002",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        220,
+        220
+      ],
+      "id": "45a71a6e-c462-4415-8e9e-b51d5c5b8c79",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "s1U0gcN2KPfYfbaF",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"idea\": \"\",\n  \"channel_style_prompt\": \"\",\n  \"character_style_prompt\": \"\",\n  \"caption\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        380,
+        180
+      ],
+      "id": "bbc7e1dd-13d6-407e-82e2-98f951965841",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "= MAIN TOPIC\n{{ $json.body.topic }}\n CHANNEL KEYWORDS\n{{ $json.body.tags }}\nOUTPUT FORMAT\n Generate with fields, presented in the exact order listed below: idea, channel_style_prompt, character_style_prompt, caption \n COLUMN GUIDELINES\n ideas: Short YouTube video title (max 710 words). Must relate to the main topic and be unique.\n channel_style_prompt: Use the provided keywords to build a phrase with 510 descriptive words.\n character_style_prompt: Describe a compelling, \ndistinct character that visually matches the idea (e.g., a Spartan in battle, a Zen monk meditating).\n captions: 2 short lines:\n 1st line = what the viewer will learn or experience in the video\n 2nd line = emotional or motivational hook",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a professional copywritter who writes actual facts in a narrative interresting way."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        220,
+        0
+      ],
+      "id": "cece1c04-76bf-4f4b-b011-345e44f6ab0f",
+      "name": "Idea Generator"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  {\n    \"voiceText\": \"A single moment can shift the weight of your story. This is that moment.\",\n \"image_prompt\": \"A wide shot of a sunrise breaking over a quiet mountain ridge, light spilling through mist. A silhouette stands still at the peak, cloak fluttering in the wind.\"\n }\n]\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        220
+      ],
+      "id": "49ebf43d-12e7-402e-9638-8e4890d19b8f",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Video Title: {{ $json.output.idea }}\nVideo Description: {{ $json.output.caption }}\n\nChannel style:  {{ $json.output.character_style_prompt }}\nCharacter style: {{ $json.output.character_style_prompt }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=ROLE\n Act as a seasoned prompt engineer with expertise in scripting voiceovers and crafting visual scenes for video storytelling.\nMake sure you use the Tavily tool to research and have sources before making any claims of facts. You should align with facts or talk about conspiracies but you should have sources and mention that in ouput.\n PROJECT STRUCTURE\n You are developing a story-driven video divided into the following phases:\n Intro: Scenes 1 to 3\n Build-Up: Scenes 4 to 11\n Conclusion: Scenes 11 to 17\n The user will give you the video title and description to base your work on.\n DELIVERABLE\n Produce a JSON array consisting of 14 objects. Each object should contain two fields:\n voiceText – a short narrative voiceover, exactly two sentences long, \nbetween 11 and 15 words each. It must feel intellectually refined yet easy to follow.\n Style and tone must align withchannel style.\n image_prompt – a richly detailed and cinematic visual description.\n This should vividly bring the scene to life and reflect the character style.\n Integrate metaphorical language and analogies, especially using the character described below where suitable.\n ESSENTIAL RULE\n Ensure that every scene transitions logically to the next. \nThe full sequence should feel like a continuous, emotionally cohesive story.\n Use simple words while creating the content\n IMPORTANT\n Do not explain or comment on your work.\n Do not use double quotes in the final output.\n Return only the JSON array."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        580,
+        0
+      ],
+      "id": "4af4a27c-287d-4575-bdb1-ad6d75c2769b",
+      "name": "Script Generator"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        600,
+        220
+      ],
+      "id": "63394d66-239b-4b47-87c3-d50f45453116",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "s1U0gcN2KPfYfbaF",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.json2video.com/v2/movies",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "project",
+              "value": "={{ $('Create video').item.json.project }}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": "={{ 21 }}"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        360
+      ],
+      "id": "0c7a48aa-83cc-41d1-a0f6-1b191cf0fcc5",
+      "name": "Check Video Status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "x2uJbpA2Z5m1WBfD",
+          "name": "json2video"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        580
+      ],
+      "id": "a9915149-8008-4815-9869-c402bc8f6579",
+      "name": "Wait",
+      "webhookId": "3267c167-ec00-4f73-8672-9b77eb17377a"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c1ead20d-71e8-4169-a9f9-276ba4ddfa65",
+                    "leftValue": "={{ $json?.movie?.status ? $json.movie.status : $json?.movies?.first()?.status ?  $json.movies.first().status : null}}",
+                    "rightValue": "error",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json?.movie?.status ? $json.movie.status : null }}",
+                    "rightValue": "running",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "108f4893-ea50-4ac7-a4dc-25fcfad1a912"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d739ae59-fcf8-4a05-b4d2-349cf7bd6fbb",
+                    "leftValue": "={{ $json?.movie?.status ? $json.movie.status : $json?.movies?.first()?.status ?  $json.movies.first().status : null}}",
+                    "rightValue": "done",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        120,
+        560
+      ],
+      "id": "7437d57e-50eb-4ffc-bcad-0ee1d89e3913",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "08985146-37fc-4ae6-975e-038f069c34c2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        60,
+        0
+      ],
+      "id": "6e85a4f0-9b11-4f4d-b2f6-531c0708cf4f",
+      "name": "Webhook",
+      "webhookId": "08985146-37fc-4ae6-975e-038f069c34c2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6e83fc3-76dc-4a34-b560-6053feff5531",
+              "name": "subtitle_data",
+              "value": "={{ JSON.stringify\n  ((() => {\n    if (!$('Webhook').item.json.body.include_subtitles) return \"no sub\";\n\n    const obj = {\n      ...$('Webhook').item.json.body.subtitles,\n      ...( $('Webhook').item.json.body.subtitles.source == 'use caption from voiceover input'\n          ? { caption: $json.output.map(d => d.voiceText).join(\"\\n\") }\n          : {}\n      )\n    };\n\n    delete obj.source; // remove source key\n    return obj;\n  })())\n}}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        100,
+        360
+      ],
+      "id": "d8574f07-a49e-4c30-9420-057bddefeb89",
+      "name": "Set subtitle data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1d253db1-1b12-461a-996e-bd4903fcb04b",
+              "name": "body",
+              "value": "={{ \n  `{\n    \"scenes\": [\n      ${\n        $('Webhook').item.json.body.include_intro\n          ? JSON.stringify(\n{'elements': [$('Webhook').item.json.body.video]}) + \",\"\n          : \"\"\n      }\n      ${(\n        $('Script Generator').item.json.output.map(p => (JSON.stringify({\n          elements: [\n            {\n              type: \"image\",\n              model: \"flux-pro\",\n              prompt: p.image_prompt,\n              \"aspect-ratio\": \"horizontal\",\n              resize: \"cover\",\n              zoom: 3\n            },\n            {\n              type: \"voice\",\n              model: \"elevenlabs\",\n              text: p.voiceText,\n              voice: \"Brian\"\n            }\n          ]\n        })))\n      ).join(',')}\n    ],\n    ${\n      $('Webhook').item.json.body.include_bg_music ||\n      $('Webhook').item.json.body.include_subtitles\n        ? `\"elements\": [\n            ${\n              $('Webhook').item.json.body.include_bg_music &&\n              $('Webhook').item.json.body.audio\n                ? JSON.stringify($('Webhook').item.json.body.audio) + ($('Webhook').item.json.body.include_subtitles && ',')\n                : \"\"\n            }\n${\n              $('Webhook').item.json.body.include_subtitles && JSON.stringify($json.subtitle_data)\n            }\n          ]`\n        : \"\"\n    }\n  }`\n }}\n",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        360
+      ],
+      "id": "71441781-1c80-4e2c-b33e-e4874e1ed4b2",
+      "name": "Set request body"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.json2video.com/v2/movies",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        360
+      ],
+      "id": "3fb13e2e-338e-43cb-8c5e-b31b7fbdfd29",
+      "name": "Create video",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "x2uJbpA2Z5m1WBfD",
+          "name": "json2video"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "489698023",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        540,
+        680
+      ],
+      "id": "6b5cf76a-9150-45f6-9e4a-50cc5068d980",
+      "name": "Telegram",
+      "webhookId": "bb7d1fcb-dbd3-4e9e-8a8e-ca32fbd669ba",
+      "credentials": {
+        "telegramApi": {
+          "id": "2gNvi0irKEudDo2v",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Check Video Status')?.item?.json?.movie?.url ? $('Check Video Status').item.json.movie.url : $('Check Video Status')?.item?.json?.movies?.first()?.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        680
+      ],
+      "id": "42259427-8c27-4799-a27f-69063b111004",
+      "name": "Download Video"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Idea Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Idea Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Idea Generator": {
+      "main": [
+        [
+          {
+            "node": "Script Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Script Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Script Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Script Generator": {
+      "main": [
+        [
+          {
+            "node": "Set subtitle data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Video Status": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Check Video Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Idea Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set subtitle data": {
+      "main": [
+        [
+          {
+            "node": "Set request body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set request body": {
+      "main": [
+        [
+          {
+            "node": "Create video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create video": {
+      "main": [
+        [
+          {
+            "node": "Check Video Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4619cd19-e3a3-40f9-838b-3d717dfb8d75",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "041b18268525d28d5106f55476fe80528ca9fe39f96f9db983655750d3bdadd9"
+  },
+  "id": "MsF7uPv6WugoxhmH",
+  "tags": []
+}

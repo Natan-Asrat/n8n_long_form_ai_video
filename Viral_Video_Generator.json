@@ -23,19 +23,6 @@
     },
     {
       "parameters": {
-        "jsonSchemaExample": "{\n  \"idea\": \"\",\n  \"channel_style_prompt\": \"\",\n  \"character_style_prompt\": \"\",\n  \"caption\": \"\"\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.2,
-      "position": [
-        380,
-        180
-      ],
-      "id": "bbc7e1dd-13d6-407e-82e2-98f951965841",
-      "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
         "promptType": "define",
         "text": "= MAIN TOPIC\n{{ $json.body.topic }}\n CHANNEL KEYWORDS\n{{ $json.body.tags }}\nOUTPUT FORMAT\n Generate with fields, presented in the exact order listed below: idea, channel_style_prompt, character_style_prompt, caption \n COLUMN GUIDELINES\n ideas: Short YouTube video title (max 710 words). Must relate to the main topic and be unique.\n channel_style_prompt: Use the provided keywords to build a phrase with 510 descriptive words.\n character_style_prompt: Describe a compelling, \ndistinct character that visually matches the idea (e.g., a Spartan in battle, a Zen monk meditating).\n captions: 2 short lines:\n 1st line = what the viewer will learn or experience in the video\n 2nd line = emotional or motivational hook",
         "hasOutputParser": true,
@@ -292,7 +279,7 @@
             {
               "id": "1d253db1-1b12-461a-996e-bd4903fcb04b",
               "name": "body",
-              "value": "={{ \n  `{\n    \"scenes\": [\n      ${\n        $('Webhook').item.json.body.include_intro\n          ? JSON.stringify(\n{'elements': [$('Webhook').item.json.body.video]}) + \",\"\n          : \"\"\n      }\n      ${(\n        $('Script Generator').item.json.output.map(p => (JSON.stringify({\n          elements: [\n            {\n              type: \"image\",\n              model: \"flux-pro\",\n              prompt: p.image_prompt,\n              \"aspect-ratio\": \"horizontal\",\n              resize: \"cover\",\n              zoom: 3\n            },\n            {\n              type: \"voice\",\n              model: \"elevenlabs\",\n              text: p.voiceText,\n              voice: \"Brian\"\n            }\n          ]\n        })))\n      ).join(',')}\n    ],\n    ${\n      $('Webhook').item.json.body.include_bg_music ||\n      $('Webhook').item.json.body.include_subtitles\n        ? `\"elements\": [\n            ${\n              $('Webhook').item.json.body.include_bg_music &&\n              $('Webhook').item.json.body.audio\n                ? JSON.stringify($('Webhook').item.json.body.audio) + ($('Webhook').item.json.body.include_subtitles && ',')\n                : \"\"\n            }\n${\n              $('Webhook').item.json.body.include_subtitles && JSON.stringify($json.subtitle_data)\n            }\n          ]`\n        : \"\"\n    }\n  }`\n }}\n",
+              "value": "={{ \n  `{\n    \"scenes\": [\n      ${\n        $('Webhook').item.json.body.include_intro\n          ? JSON.stringify(\n{'elements': [$('Webhook').item.json.body.video]}) + \",\"\n          : \"\"\n      }\n      ${(\n        $('Script Generator').item.json.output.map(p => (JSON.stringify({\n          elements: [\n            {\n              type: \"image\",\n              model: \"flux-pro\",\n              prompt: p.image_prompt,\n              \"aspect-ratio\": \"horizontal\",\n              resize: \"cover\",\n              zoom: 3\n            },\n            {\n              type: \"voice\",\n              model: \"elevenlabs\",\n              text: p.voiceText,\n              voice: \"Brian\"\n            }\n          ]\n        })))\n      ).join(',')}\n    ],\n    ${\n      $('Webhook').item.json.body.include_bg_music ||\n      $('Webhook').item.json.body.include_subtitles\n        ? `\"elements\": [\n            ${\n              $('Webhook').item.json.body.include_bg_music &&\n              $('Webhook').item.json.body.audio\n                ? JSON.stringify(\n{\n...$('Webhook').item.json.body.audio,\nduration: -2,\n}\n\n) + ($('Webhook').item.json.body.include_subtitles && ',')\n                : \"\"\n            }\n${\n              $('Webhook').item.json.body.include_subtitles && JSON.stringify($json.subtitle_data)\n            }\n          ]`\n        : \"\"\n    }\n  }`\n }}\n",
               "type": "object"
             }
           ]
@@ -374,9 +361,93 @@
       ],
       "id": "42259427-8c27-4799-a27f-69063b111004",
       "name": "Download Video"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"idea\": \"\",\n  \"channel_style_prompt\": \"\",\n  \"character_style_prompt\": \"\",\n  \"caption\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        380,
+        180
+      ],
+      "id": "bbc7e1dd-13d6-407e-82e2-98f951965841",
+      "name": "Structured Output Parser"
     }
   ],
-  "pinData": {},
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "localhost:5678",
+            "connection": "keep-alive",
+            "content-length": "874",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "null",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en-IN;q=0.9,en;q=0.8"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "topic": "manhattan project short only 10 seconds",
+            "tags": "scary,conspiracy",
+            "include_intro": true,
+            "include_bg_music": true,
+            "include_subtitles": true,
+            "video": {
+              "type": "video",
+              "src": "https://videos.pexels.com/video-files/3191861/3191861-hd_1920_1080_25fps.mp4",
+              "resize": "cover",
+              "fade-in": 0.2,
+              "fade-out": 0.2
+            },
+            "audio": {
+              "type": "audio",
+              "src": "https://assets.json2video.com/clients/8ePcu1dWJH/uploads/Rise and Ruin.mp3",
+              "loop": -1,
+              "volume": 0.4,
+              "fade-in": 0.5,
+              "fade-out": 1.9
+            },
+            "subtitles": {
+              "type": "subtitles",
+              "source": "use caption from voiceover input",
+              "language": "en-GB",
+              "model": "default",
+              "settings": {
+                "style": "classic",
+                "font-family": "Luckiest Guy",
+                "max-words-per-line": 4,
+                "position": "bottom-center",
+                "line-color": "#b76bf5",
+                "word-color": "#08fdab",
+                "outline-color": "#000000",
+                "outline-width": 10,
+                "box-color": "#000000",
+                "shadow-color": "#000000",
+                "shadow-offset": 2,
+                "all-caps": true,
+                "font-size": 50
+              }
+            }
+          },
+          "webhookUrl": "http://localhost:5678/webhook-test/08985146-37fc-4ae6-975e-038f069c34c2",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
   "connections": {
     "Google Gemini Chat Model": {
       "ai_languageModel": [
@@ -384,17 +455,6 @@
           {
             "node": "Idea Generator",
             "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Structured Output Parser": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "Idea Generator",
-            "type": "ai_outputParser",
             "index": 0
           }
         ]
@@ -546,13 +606,24 @@
           }
         ]
       ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Idea Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "4619cd19-e3a3-40f9-838b-3d717dfb8d75",
+  "versionId": "c3335a3e-e055-4167-906a-11f944779291",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "041b18268525d28d5106f55476fe80528ca9fe39f96f9db983655750d3bdadd9"

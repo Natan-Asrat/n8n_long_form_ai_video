@@ -2,6 +2,16 @@
 - User fills a form to generate a long form video based on topic and tags (single word descriptions), optionally including Intro video and background music.
 - You can check it out by importing `Viral_Video_Generator.json` into n8n.
 
+## Input
+
+![input](./screenshots/web_long.png)
+
+## Output
+
+![output](./screenshots/output2.png)
+
+- It has successfully generated a video based on the form details and sent it to my Telegram through a Telegram Bot.
+
 ## Nodes 
 
 ![nodes](./screenshots/initial.png)
@@ -16,16 +26,6 @@
 - Telegram
     - Send video
 - Wait, Switch, Set nodes
-
-## Input
-
-![input](./screenshots/web_long.png)
-
-## Output
-
-![output](./screenshots/output2.png)
-
-- It has successfully generated a video based on the form details and sent it to my Telegram through a Telegram Bot.
 
 ## Steps
 
